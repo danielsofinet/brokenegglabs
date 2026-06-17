@@ -116,8 +116,97 @@
 @keyframes bke-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes bke-pop { from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
+/* ---------------------------------------------------------------- neutralize old theme JS
+   The WordPress theme drove scrolling with ASScroll and an intro preloader, both
+   handled by the 516KB main.js we removed. Without that JS the preloader overlay
+   never lifts and the scroll container stays frozen. Here we disable all of it and
+   fall back to clean native scrolling. The brand's circular reveal now lives in the
+   page-to-page transition (.bke-trans) instead of the one-time intro. */
+.pre-load, .swipe, .cursor { display: none !important; }
+
+main[data-barba="container"],
+.main-wrap {
+  opacity: 1 !important;
+  visibility: visible !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  height: auto !important;
+  animation: none !important;
+}
+
+.asscroll-container,
+.asscroll-container.touch {
+  position: relative !important;
+  height: auto !important;
+  width: 100% !important;
+  contain: none !important;
+  will-change: auto !important;
+  transform: none !important;
+}
+.inner,
+.inner:not(.touch) { transform: none !important; will-change: auto !important; }
+
+/* the intro letter masks (LOAD preloader + hero logo) start clipped to nothing and
+   were revealed by JS; show them statically */
+.a-mask, .d-mask, .l-mask, .o-mask {
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  transform: none !important;
+}
+
+html, body { overflow-x: hidden !important; height: auto !important; }
+html.ready, body.ready, .ready { overflow: visible !important; height: auto !important; }
+
+/* ---------------------------------------------------------------- auto-hide header */
+header {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
+}
+header.bke-nav-hidden { transform: translateY(-120%) !important; }
+
+/* ---------------------------------------------------------------- circular page transition */
+.bke-trans {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+  background: #f7f6f1;
+  clip-path: circle(0 at var(--bx, 50%) var(--by, 50%));
+  opacity: 1;
+}
+.bke-trans.is-cover {
+  transition: clip-path 0.5s cubic-bezier(0.7, 0, 0.3, 1);
+  clip-path: circle(150% at var(--bx, 50%) var(--by, 50%));
+}
+.bke-trans.is-cover.is-reveal {
+  transition: opacity 0.5s ease;
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------- process slider
+   Drag-to-scroll horizontal strip (replaces the dead GSAP pin-scroll). */
+#sectionPin {
+  height: auto !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  cursor: grab;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+#sectionPin::-webkit-scrollbar { display: none; }
+#sectionPin.bke-dragging { cursor: grabbing; scroll-behavior: auto; }
+#sectionPin.bke-dragging * { user-select: none; }
+#sectionPin .pin-wrap { height: auto !important; }
+.drag-info { cursor: grab; }
+
 @media (prefers-reduced-motion: reduce) {
   .bke-scrim, .bke-card { animation: none; }
   .bke-close:hover { transform: none; }
   .bke-send:hover { transform: none; }
+  header { transition: none !important; }
+  .bke-trans.is-cover { transition: clip-path 0.2s linear; }
+  .bke-trans.is-cover.is-reveal { transition: opacity 0.2s linear; }
 }
