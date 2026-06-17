@@ -203,24 +203,26 @@
     navVY = 0;
     if (bkeNav) bkeNav.classList.remove("bke-hide");
     initVideos();
-    // a new page swapped in — reveal the transition cover once its layout settles
-    if (coverActive) { clearTimeout(coverHideTimer); coverHideTimer = setTimeout(hideCover, 1250); }
+    // a new page swapped in — match the cover to its colour (so the fade-out dissolves
+    // the new page in seamlessly) and reveal once its layout settles
+    if (coverActive) {
+      cover.style.background = currentBg();
+      clearTimeout(coverHideTimer);
+      coverHideTimer = setTimeout(hideCover, 1250);
+    }
   }).observe(document.body, { childList: true });
 
   /* ---------------------------------------------------------------- page transition
-     Show a branded circle wipe on internal navigation (visual only — the theme's
-     Barba still does the actual swap). The cover stays up through the swap AND the
-     post-swap layout settle, so the new page never "blinks into place"; it lifts once
-     the content has settled. */
+     On internal navigation, fade in a blurred translucent layer (same look as the
+     contact modal's scrim), hold it through the swap AND the theme's post-swap layout
+     settle so the new page never "blinks into place", then fade it back out to reveal
+     the settled page. Visual only — Barba still does the actual swap. */
   var cover = document.createElement("div");
   cover.className = "bke-cover";
   document.body.appendChild(cover);
   var coverActive = false, coverHideTimer = null;
-  function showCover(x, y) {
-    cover.classList.remove("is-out");
-    cover.style.setProperty("--cx", (x || window.innerWidth / 2) + "px");
-    cover.style.setProperty("--cy", (y || window.innerHeight / 2) + "px");
-    void cover.offsetWidth;
+  function showCover() {
+    cover.style.background = currentBg(); // dissolve through the current page's colour
     cover.classList.add("is-in");
     coverActive = true;
     clearTimeout(coverHideTimer);
@@ -230,8 +232,7 @@
     if (!coverActive) return;
     coverActive = false;
     clearTimeout(coverHideTimer);
-    cover.classList.add("is-out");
-    setTimeout(function () { cover.classList.remove("is-in", "is-out"); }, 560);
+    cover.classList.remove("is-in");
   }
   // capture phase so we run before Barba calls preventDefault (visual only — we don't
   // stop the event, Barba still performs the swap)
@@ -244,7 +245,7 @@
     var url;
     try { url = new URL(href, location.href); } catch (_) { return; }
     if (url.origin !== location.origin || !/\.html(\?|#|$)/.test(url.pathname)) return;
-    showCover(e.clientX, e.clientY);
+    showCover();
   }, true);
 
   // Fold: hide on scroll down, show on scroll up, always show near the top.
