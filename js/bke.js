@@ -84,27 +84,33 @@
     if (e.key === "Escape" && modal.classList.contains("is-open")) close();
   });
 
-  // Reliable, progressive autoplay for background videos: play when scrolled
-  // into view, pause when off-screen. Works even if the old theme JS interferes,
-  // and keeps initial load light (preload="metadata" + faststart).
-  (function () {
-    var vids = document.querySelectorAll("video[autoplay], video.bke-vid");
-    if (!vids.length) return;
-    if (!("IntersectionObserver" in window)) {
-      vids.forEach(function (v) { v.play().catch(function () {}); });
-      return;
-    }
-    var io = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (en) {
-          if (en.isIntersecting) en.target.play().catch(function () {});
-          else en.target.pause();
-        });
-      },
-      { threshold: 0.25 }
-    );
-    vids.forEach(function (v) { io.observe(v); });
-  })();
+  // Progressive autoplay for background videos. IntersectionObserver is unreliable
+  // with the theme's transform-based virtual scroll (ASScroll), so we poll each
+  // video's real position a few times a second: play the ones in view, pause the
+  // rest. Robust to ASScroll, page transitions, and the muted-autoplay policy.
+  function initVideos() {
+    document.querySelectorAll("video[autoplay], video.bke-vid").forEach(function (v) {
+      v.muted = true;
+      v.setAttribute("playsinline", "");
+      v.removeAttribute("controls");
+    });
+    tickVideos();
+  }
+  function tickVideos() {
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    document.querySelectorAll("video[autoplay], video.bke-vid").forEach(function (v) {
+      var r = v.getBoundingClientRect();
+      var inView = r.height > 0 && r.top < vh * 0.95 && r.bottom > vh * 0.05;
+      if (inView) {
+        v.muted = true;
+        if (v.paused) v.play().catch(function () {});
+      } else if (!v.paused) {
+        v.pause();
+      }
+    });
+  }
+  initVideos();
+  setInterval(tickVideos, 300);
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -156,7 +162,9 @@
     if (bkeNav) return;
     var orig = document.querySelector("header");
     if (!orig) return;
-    bkeNav = document.createElement("header");
+    // a <div>, not a <header>, so the theme's JS (which animates `header` opacity on
+    // the intro) doesn't touch our nav and leave it stuck invisible
+    bkeNav = document.createElement("div");
     bkeNav.className = "bke-nav";
     bkeNav.innerHTML = orig.innerHTML;
     bkeNav.querySelectorAll("a[href]").forEach(function (a) {
@@ -165,10 +173,37 @@
     });
     document.body.appendChild(bkeNav);
     syncNavColor();
+    holdNavForPreloader();
+  }
+  // On a full page load the theme plays an intro preloader (~3s). Don't show our nav
+  // on top of it — reveal it when the preloader lifts, so it appears with the page
+  // (just like it stays put during a Barba navigation, which has no preloader).
+  function preloaderActive() {
+    var p = document.querySelector(".pre-load");
+    if (!p) return false;
+    var cs = getComputedStyle(p);
+    return cs.display !== "none" && cs.visibility !== "hidden" && parseFloat(cs.opacity || "1") > 0.01;
+  }
+  function holdNavForPreloader() {
+    if (!bkeNav || !preloaderActive()) return;
+    bkeNav.classList.add("bke-preload-wait");
+    var tries = 0;
+    var iv = setInterval(function () {
+      tries++;
+      if (!preloaderActive() || tries > 80) {
+        bkeNav.classList.remove("bke-preload-wait");
+        clearInterval(iv);
+      }
+    }, 80);
   }
   buildNav();
   // re-colour + reset fold state whenever a new page is swapped in
-  new MutationObserver(function () { syncNavColor(); navVY = 0; if (bkeNav) bkeNav.classList.remove("bke-hide"); }).observe(document.body, { childList: true });
+  new MutationObserver(function () {
+    syncNavColor();
+    navVY = 0;
+    if (bkeNav) bkeNav.classList.remove("bke-hide");
+    initVideos();
+  }).observe(document.body, { childList: true });
 
   // Fold: hide on scroll down, show on scroll up, always show near the top.
   // ASScroll hijacks the wheel (native scroll stays at 0) on desktop, so we track a
