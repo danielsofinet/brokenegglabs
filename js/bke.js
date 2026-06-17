@@ -4,6 +4,19 @@
 (function () {
   var ACCESS_KEY = "b10bd5d4-b5bd-4a2e-9363-1f25ee7c138b";
 
+  /* ---------------------------------------------------------------- clean URL
+     Keep the address bar at "/" on every page. The page transitions (Barba)
+     otherwise change it to the full path, e.g. /projects/minot-vin.html. Barba
+     loads pages by the clicked link's href, not the visible URL, so pinning the
+     displayed URL to "/" is safe (verified across multi-page navigation). */
+  (function () {
+    var push = history.pushState.bind(history);
+    var replace = history.replaceState.bind(history);
+    history.pushState = function (s, t) { return push(s, t, "/"); };
+    history.replaceState = function (s, t) { return replace(s, t, "/"); };
+    try { replace(history.state, "", "/"); } catch (e) {}
+  })();
+
   var modal = document.createElement("div");
   modal.className = "bke-modal";
   modal.setAttribute("aria-hidden", "true");
