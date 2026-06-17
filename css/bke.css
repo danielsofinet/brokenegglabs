@@ -1,0 +1,123 @@
+/* Broken Egg Labs — contact modal styles (clean, on-brand: cream card, bold
+   display headline, playful). Independent of the WordPress theme CSS. */
+.bke-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+}
+.bke-modal.is-open { display: block; }
+.bke-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 16, 12, 0.55);
+  backdrop-filter: blur(4px);
+  animation: bke-fade 0.3s ease;
+}
+.bke-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(540px, 92vw);
+  max-height: 92vh;
+  overflow: auto;
+  background: #f5f1e8;
+  border-radius: 26px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.35);
+  animation: bke-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bke-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: #1a1410;
+  color: #f5f1e8;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.bke-close:hover { transform: rotate(90deg); background: #000; }
+.bke-body { padding: clamp(26px, 5vw, 48px); }
+.bke-eyebrow {
+  font-family: "glddisplay", system-ui, sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e0467e;
+  margin: 0 0 6px;
+}
+.bke-title {
+  font-family: "glddisplay", system-ui, sans-serif;
+  font-weight: 900;
+  font-size: clamp(34px, 7vw, 52px);
+  line-height: 0.95;
+  color: #1a1410;
+  margin: 0 0 12px;
+}
+.bke-sub { color: #5a544c; font-size: 16px; margin: 0 0 24px; }
+.bke-form { display: flex; flex-direction: column; gap: 16px; }
+.bke-hp { position: absolute; left: -9999px; opacity: 0; }
+.bke-field { display: flex; flex-direction: column; gap: 6px; }
+.bke-field span {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1a1410;
+}
+.bke-field input,
+.bke-field textarea {
+  font: inherit;
+  font-size: 16px;
+  padding: 13px 16px;
+  border: 2px solid #d9d2c4;
+  border-radius: 14px;
+  background: #fffdf8;
+  color: #1a1410;
+  outline: none;
+  transition: border-color 0.2s ease;
+  width: 100%;
+  resize: vertical;
+}
+.bke-field input:focus,
+.bke-field textarea:focus { border-color: #e0467e; }
+.bke-send {
+  margin-top: 6px;
+  font-family: "glddisplay", system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 999px;
+  background: #1a1410;
+  color: #f5f1e8;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.bke-send:hover { transform: translateY(-2px); background: #e0467e; }
+.bke-send:disabled { opacity: 0.6; cursor: default; transform: none; }
+.bke-status { color: #c2356a; font-size: 14px; min-height: 1em; margin: 4px 0 0; }
+.bke-success { display: none; text-align: center; padding: 20px 0; }
+.bke-success-emoji { font-size: 48px; margin: 0 0 8px; }
+.bke-success h3 { font-family: "glddisplay", system-ui, sans-serif; font-size: 30px; color: #1a1410; margin: 0 0 8px; }
+.bke-success p { color: #5a544c; font-size: 16px; margin: 0; }
+.bke-body.is-sent .bke-form,
+.bke-body.is-sent .bke-eyebrow,
+.bke-body.is-sent .bke-title,
+.bke-body.is-sent .bke-sub { display: none; }
+.bke-body.is-sent .bke-success { display: block; }
+
+@keyframes bke-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bke-pop { from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .bke-scrim, .bke-card { animation: none; }
+  .bke-close:hover { transform: none; }
+  .bke-send:hover { transform: none; }
+}
