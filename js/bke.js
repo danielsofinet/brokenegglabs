@@ -33,8 +33,8 @@
           '<input type="hidden" name="subject" value="New message from brokenegglabs.com">' +
           '<input type="hidden" name="from_name" value="Broken Egg Labs site">' +
           '<input type="checkbox" name="botcheck" class="bke-hp" tabindex="-1" autocomplete="off">' +
-          '<label class="bke-field"><span>Name</span><input type="text" name="name" required></label>' +
-          '<label class="bke-field"><span>Email</span><input type="email" name="email" required></label>' +
+          '<label class="bke-field"><span>Name</span><input type="text" name="name" autocomplete="name" required></label>' +
+          '<label class="bke-field"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>' +
           '<label class="bke-field"><span>Message</span><textarea name="message" rows="4" required></textarea></label>' +
           '<button class="bke-send" type="submit">Send message</button>' +
           '<p class="bke-status" role="status" aria-live="polite"></p>' +
@@ -131,6 +131,67 @@
         sendBtn.textContent = "Send message";
       });
   });
+
+  /* ---------------------------------------------------------------- replacement nav
+     Hide the GSAP-pinned header and run our own fixed clone. It stays put, folds
+     smoothly on scroll the same way on every page, and recolours itself light/dark
+     to match the page it's over. */
+  var bkeNav = null;
+  function isDarkBg(hex) {
+    if (!hex) return false;
+    hex = hex.replace("#", "").trim();
+    if (hex.length === 3) hex = hex.split("").map(function (c) { return c + c; }).join("");
+    var r = parseInt(hex.substr(0, 2), 16), g = parseInt(hex.substr(2, 2), 16), b = parseInt(hex.substr(4, 2), 16);
+    if (isNaN(r)) return false;
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.55;
+  }
+  function currentBg() {
+    var m = document.querySelector('[data-barba="container"]') || document.querySelector("main");
+    return (m && m.getAttribute("data-bg")) || "#F7F6F1";
+  }
+  function syncNavColor() {
+    if (bkeNav) bkeNav.classList.toggle("is-dark", isDarkBg(currentBg()));
+  }
+  function buildNav() {
+    if (bkeNav) return;
+    var orig = document.querySelector("header");
+    if (!orig) return;
+    bkeNav = document.createElement("header");
+    bkeNav.className = "bke-nav";
+    bkeNav.innerHTML = orig.innerHTML;
+    bkeNav.querySelectorAll("a[href]").forEach(function (a) {
+      var m = (a.getAttribute("href") || "").match(/(index|pr|cs|contact)\.html$/);
+      if (m) a.setAttribute("href", "/" + m[0]);
+    });
+    document.body.appendChild(bkeNav);
+    syncNavColor();
+  }
+  buildNav();
+  // re-colour + reset fold state whenever a new page is swapped in
+  new MutationObserver(function () { syncNavColor(); navVY = 0; if (bkeNav) bkeNav.classList.remove("bke-hide"); }).observe(document.body, { childList: true });
+
+  // Fold: hide on scroll down, show on scroll up, always show near the top.
+  // ASScroll hijacks the wheel (native scroll stays at 0) on desktop, so we track a
+  // virtual scroll position from wheel deltas; on touch devices native scroll works.
+  var navVY = 0;
+  function navShow() { if (bkeNav) bkeNav.classList.remove("bke-hide"); }
+  function navHide() { if (bkeNav) bkeNav.classList.add("bke-hide"); }
+  window.addEventListener("wheel", function (e) {
+    if (!bkeNav) return;
+    navVY = Math.max(0, navVY + e.deltaY);
+    if (navVY < 100) navShow();
+    else if (e.deltaY > 6) navHide();
+    else if (e.deltaY < -6) navShow();
+  }, { passive: true });
+  var navLastY = 0;
+  window.addEventListener("scroll", function () {
+    if (!bkeNav) return;
+    var y = window.pageYOffset || 0;
+    if (y < 80) navShow();
+    else if (y > navLastY + 6) navHide();
+    else if (y < navLastY - 6) navShow();
+    navLastY = y;
+  }, { passive: true });
 
   /* ---------------------------------------------------------------- Process slider
      "The Process" strip (#sectionPin) — the original GSAP pin-scroll is dead, so we

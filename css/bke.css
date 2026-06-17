@@ -116,6 +116,38 @@
 @keyframes bke-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes bke-pop { from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
+/* ---------------------------------------------------------------- replacement nav
+   The original <header> is GSAP-pinned and folds jankily (only on the homepage),
+   and GSAP sets its transform with inline !important so it can't be controlled.
+   We hide it and use our own fixed clone (.bke-nav) that we fully control: a smooth
+   auto-hide on scroll, consistent on every page, with correct light/dark colours. */
+header:not(.bke-nav) { visibility: hidden !important; pointer-events: none !important; }
+.bke-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.bke-nav a,
+.bke-nav .wrapper { pointer-events: auto; }
+.bke-nav.bke-hide { transform: translateY(-130%); }
+/* light text + logo on dark pages */
+.bke-nav.is-dark #site-navigation .menu a { color: #f7f6f1 !important; }
+.bke-nav.is-dark .logo .st0,
+.bke-nav.is-dark .logo svg path { fill: #f7f6f1 !important; }
+/* dark text + logo on light pages */
+.bke-nav:not(.is-dark) #site-navigation .menu a { color: #2d2d2d !important; }
+.bke-nav:not(.is-dark) .logo .st0,
+.bke-nav:not(.is-dark) .logo svg path { fill: #2d2d2d !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bke-nav { transition: none; }
+}
+
 /* ---------------------------------------------------------------- Process slider
    The original GSAP pin-scroll for "The Process" never initialises (its track has
    no transform), so the section is stuck. Make it a clean drag-to-scroll strip
