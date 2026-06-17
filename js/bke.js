@@ -131,4 +131,37 @@
         sendBtn.textContent = "Send message";
       });
   });
+
+  /* ---------------------------------------------------------------- Process slider
+     "The Process" strip (#sectionPin) — the original GSAP pin-scroll is dead, so we
+     drive it as a drag-to-scroll strip. Delegated on document so it keeps working
+     after page transitions without re-init. */
+  var dragPin = null, startX = 0, startScroll = 0, moved = false;
+  document.addEventListener("pointerdown", function (e) {
+    var pin = e.target.closest && e.target.closest("#sectionPin");
+    if (!pin) return;
+    dragPin = pin; startX = e.clientX; startScroll = pin.scrollLeft; moved = false;
+    pin.classList.add("bke-dragging");
+  });
+  document.addEventListener("pointermove", function (e) {
+    if (!dragPin) return;
+    var dx = e.clientX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    dragPin.scrollLeft = startScroll - dx;
+  });
+  function endDrag() { if (dragPin) { dragPin.classList.remove("bke-dragging"); dragPin = null; } }
+  document.addEventListener("pointerup", endDrag);
+  document.addEventListener("pointercancel", endDrag);
+  document.addEventListener("click", function (e) {
+    if (moved && e.target.closest && e.target.closest("#sectionPin")) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  document.addEventListener("wheel", function (e) {
+    var pin = e.target.closest && e.target.closest("#sectionPin");
+    if (!pin) return;
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    var max = pin.scrollWidth - pin.clientWidth;
+    if ((pin.scrollLeft <= 0 && e.deltaY < 0) || (pin.scrollLeft >= max && e.deltaY > 0)) return;
+    e.preventDefault();
+    pin.scrollLeft += e.deltaY;
+  }, { passive: false });
 })();

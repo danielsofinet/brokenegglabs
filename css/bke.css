@@ -116,6 +116,25 @@
 @keyframes bke-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes bke-pop { from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
+/* ---------------------------------------------------------------- Process slider
+   The original GSAP pin-scroll for "The Process" never initialises (its track has
+   no transform), so the section is stuck. Make it a clean drag-to-scroll strip
+   instead (drag / wheel / swipe). GSAP isn't driving the track, so no conflict. */
+#sectionPin {
+  height: auto !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  cursor: grab;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+#sectionPin::-webkit-scrollbar { display: none; }
+#sectionPin.bke-dragging { cursor: grabbing; }
+#sectionPin.bke-dragging * { user-select: none; }
+#sectionPin .pin-wrap { height: auto !important; }
+
 @media (prefers-reduced-motion: reduce) {
   .bke-scrim, .bke-card { animation: none; }
   .bke-close:hover { transform: none; }
