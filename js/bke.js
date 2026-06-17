@@ -54,8 +54,11 @@
 
   // open from: nav Contact link, legacy mailto links, or anything [data-contact]
   // capture phase + stopImmediatePropagation so we win over the old theme JS
+  // Triggers: anything marked [data-contact] (the contact CTAs on the contact
+  // page) and any legacy mailto link. The nav "Contact" link is NOT intercepted —
+  // it navigates to the contact page as normal.
   document.addEventListener("click", function (e) {
-    var t = e.target.closest('[data-contact], a[href^="mailto:"], a[href$="contact.html"], a[href$="/contact"]');
+    var t = e.target.closest('[data-contact], a[href^="mailto:"]');
     if (!t) return;
     e.preventDefault();
     e.stopImmediatePropagation();
