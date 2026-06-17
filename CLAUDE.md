@@ -1,52 +1,46 @@
 # Broken Egg Labs — brokenegglabs.com
 
-Daniel's own studio portfolio site (originally built ~2021/2022 in WordPress, exported
-to static HTML, hosted on Firebase). Migrated to **Vercel + GitHub** (push to `main`
-auto-deploys). Custom domain DNS is managed in Squarespace.
+Daniel's own studio portfolio (built ~2022 in WordPress, exported to static HTML).
+Hosted on **Vercel + GitHub** (push to `main` auto-deploys). DNS in Squarespace.
 
-## How it's built now
-- **Plain static HTML/CSS** — no build step. Open any `.html` directly or serve the folder.
+## Architecture
+- Plain static HTML/CSS, no build step. Serve the folder (`python3 -m http.server`).
 - Pages: `index.html` (home), `pr.html` (About), `cs.html` (Work), `contact.html`,
-  and `projects/*.html` (atelia, combet, el, minot-vin, remace-active).
-- `css/main.css` — the original theme CSS (large, kept). `css/bke.css` — our clean
-  additions + overrides.
-- `js/bke.js` — our clean vanilla JS (no dependencies). This is the ONLY app script
-  besides the SproutVideo player API.
+  `projects/*.html` (atelia, combet, el, minot-vin, remace-active).
+- **The original WordPress theme bundle is intentionally KEPT** — `js/main.js`
+  (~516KB, minified) drives ASScroll smooth-scroll, GSAP, the intro/preloader, the
+  marquees, and Barba.js page transitions. jQuery + jquery-migrate support it.
+  `css/main.css` is the theme CSS. Do NOT remove these — an earlier attempt to rip
+  them out and rebuild clean broke the marquees/intro/animations and was reverted.
+- **Our clean layer is `js/bke.js` + `css/bke.css`** (dependency-free). This is where
+  all our fixes live, layered on top without touching the minified bundle.
 
-## What bke.js does (replaced the old 516KB WordPress/jQuery/ASScroll bundle)
-- **Client-side router**: intercepts internal `.html` link clicks, fetches the page,
-  swaps the `<main data-barba="container">` content. The URL bar never changes (stays
-  at `/`), so the whole thing feels like one app. Relative asset URLs in fetched pages
-  are absolutized against their source path so images/videos resolve no matter where
-  the content is injected.
-- **Circular page transition** (`.bke-trans`): a clip-path circle expands from the
-  click point in the destination page's bg colour, then fades to reveal the new page.
-  This reproduces the brand's signature circle reveal (was Barba.js before).
-- **Auto-hide header**: folds up on scroll down, drops back on scroll up.
-- **Contact modal**: on-brand cream card form. Submits to **Web3Forms** which emails
-  daniel.sofinet@gmail.com. Triggered by any `[data-contact]` element or `mailto:` link.
-  The CONTACT nav link still goes to the contact PAGE; the on-page CTAs open the modal.
-- **Process slider** (About page `#sectionPin`): drag-to-scroll horizontal strip
-  (replaced the dead GSAP pin-scroll). Mouse drag + wheel + touch.
-- **Progressive video autoplay**: videos play when scrolled into view (IntersectionObserver),
-  muted, `preload="metadata"` so the page stays light.
+## What bke.js / bke.css do
+- **Contact modal** → Web3Forms → daniel.sofinet@gmail.com. Opens from any
+  `[data-contact]` element or `mailto:` link (capture-phase, wins over theme JS).
+  The CONTACT nav link goes to the contact PAGE; on-page CTAs open the modal.
+- **Clean URL**: `history.pushState/replaceState` overridden so the address bar stays
+  `/` on every page (Barba loads pages by the link href, not the URL). Note: because
+  of this, a hard refresh on any page returns to the homepage (expected trade-off).
+- **Replacement nav** (`.bke-nav`): the original `<header>` is GSAP-pinned with inline
+  `!important` transforms (uncontrollable, and folds jankily only on the homepage), so
+  we hide it (`header:not(.bke-nav){visibility:hidden}`) and render our own fixed clone.
+  It auto-hides on scroll down / reveals on scroll up consistently on every page, and
+  recolours light/dark from the page's `data-bg` luminance. Links navigate via Barba.
+- **Process slider** (`#sectionPin` on About): the original GSAP pin-scroll never
+  initialises, so we drive it as a drag/wheel/swipe horizontal scroller (delegated).
+- **Progressive video autoplay**: videos play on scroll into view (IntersectionObserver),
+  muted, `preload="metadata"`. Local compressed files in `assets/video/`.
 
-## Important: the old theme JS is gone
-The WordPress `main.js` ran **ASScroll** (smooth scroll) and an intro preloader. Both
-are removed. `css/bke.css` neutralizes them: `.pre-load`/`.swipe`/`.cursor` hidden,
-`.asscroll-container` un-fixed, `.main-wrap` forced visible, native scrolling restored.
-If a page ever renders blank or won't scroll, check those overrides in `bke.css`.
-
-## Media
-- Images compressed with `sips`. Videos compressed with `ffmpeg` (libx264, `-an` no
-  audio, `+faststart`) and live in `assets/video/`.
-
-## Contact form
-- Web3Forms access key is in `js/bke.js` (`ACCESS_KEY`). Public by design (it only lets
-  the form post to the configured inbox). Delivery target: daniel.sofinet@gmail.com.
+## Important gotchas
+- **Relative asset paths + clean URL**: because the URL is forced to `/`, asset paths
+  must be root-absolute or they break. Project pages use `/projects/<name>/img.jpg`
+  and `/projects/<name>.html`. Keep new asset refs root-absolute.
+- The minified `main.js` controls scroll/nav/transitions; you generally cannot override
+  GSAP's inline `!important` transforms — work around it (as the replacement nav does)
+  rather than fighting it.
 
 ## Deploy
-- `git push` to `main` → Vercel builds and deploys. Vercel deployment protection (SSO)
-  must stay OFF or visitors get a login wall.
+- `git push` to `main` → Vercel builds & deploys. Keep Vercel deployment protection OFF.
 
 See `.claude/` for session handoff notes.
