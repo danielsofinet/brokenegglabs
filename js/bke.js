@@ -68,6 +68,28 @@
     if (e.key === "Escape" && modal.classList.contains("is-open")) close();
   });
 
+  // Reliable, progressive autoplay for background videos: play when scrolled
+  // into view, pause when off-screen. Works even if the old theme JS interferes,
+  // and keeps initial load light (preload="metadata" + faststart).
+  (function () {
+    var vids = document.querySelectorAll("video[autoplay], video.bke-vid");
+    if (!vids.length) return;
+    if (!("IntersectionObserver" in window)) {
+      vids.forEach(function (v) { v.play().catch(function () {}); });
+      return;
+    }
+    var io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) en.target.play().catch(function () {});
+          else en.target.pause();
+        });
+      },
+      { threshold: 0.25 }
+    );
+    vids.forEach(function (v) { io.observe(v); });
+  })();
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     if (form.querySelector(".bke-hp").checked) return; // honeypot
