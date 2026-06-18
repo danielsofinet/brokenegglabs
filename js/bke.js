@@ -203,50 +203,7 @@
     navVY = 0;
     if (bkeNav) bkeNav.classList.remove("bke-hide");
     initVideos();
-    // a new page swapped in — match the cover to its colour (so the fade-out dissolves
-    // the new page in seamlessly) and reveal once its layout settles
-    if (coverActive) {
-      cover.style.background = currentBg();
-      clearTimeout(coverHideTimer);
-      coverHideTimer = setTimeout(hideCover, 1250);
-    }
   }).observe(document.body, { childList: true });
-
-  /* ---------------------------------------------------------------- page transition
-     On internal navigation, fade in a blurred translucent layer (same look as the
-     contact modal's scrim), hold it through the swap AND the theme's post-swap layout
-     settle so the new page never "blinks into place", then fade it back out to reveal
-     the settled page. Visual only — Barba still does the actual swap. */
-  var cover = document.createElement("div");
-  cover.className = "bke-cover";
-  document.body.appendChild(cover);
-  var coverActive = false, coverHideTimer = null;
-  function showCover() {
-    cover.style.background = currentBg(); // dissolve through the current page's colour
-    cover.classList.add("is-in");
-    coverActive = true;
-    clearTimeout(coverHideTimer);
-    coverHideTimer = setTimeout(hideCover, 2800); // fallback if nav never completes
-  }
-  function hideCover() {
-    if (!coverActive) return;
-    coverActive = false;
-    clearTimeout(coverHideTimer);
-    cover.classList.remove("is-in");
-  }
-  // capture phase so we run before Barba calls preventDefault (visual only — we don't
-  // stop the event, Barba still performs the swap)
-  document.addEventListener("click", function (e) {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var a = e.target.closest("a[href]");
-    if (!a || a.hasAttribute("data-contact") || a.target === "_blank") return;
-    var href = a.getAttribute("href");
-    if (!href || href.charAt(0) === "#" || /^(mailto:|tel:|javascript:)/i.test(href)) return;
-    var url;
-    try { url = new URL(href, location.href); } catch (_) { return; }
-    if (url.origin !== location.origin || !/\.html(\?|#|$)/.test(url.pathname)) return;
-    showCover();
-  }, true);
 
   // Fold: hide on scroll down, show on scroll up, always show near the top.
   // ASScroll hijacks the wheel (native scroll stays at 0) on desktop, so we track a
