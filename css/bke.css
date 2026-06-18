@@ -147,6 +147,10 @@ header:not(.bke-nav) { visibility: hidden !important; pointer-events: none !impo
 @media (min-width: 90em) {
   .bke-nav .logo svg { width: 10.25rem; }
 }
+/* ease the light/dark switch so it transitions with the page instead of blinking */
+.bke-nav #site-navigation .menu a { transition: color 0.45s ease; }
+.bke-nav .logo .st0,
+.bke-nav .logo svg path { transition: fill 0.45s ease; }
 /* light text + logo on dark pages */
 .bke-nav.is-dark #site-navigation .menu a { color: #f7f6f1 !important; }
 .bke-nav.is-dark .logo .st0,
